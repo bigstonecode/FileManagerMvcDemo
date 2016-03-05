@@ -5,8 +5,7 @@
 整合於在CKEditor，取代CKFinder。
 
 ## Filemanager 資料夾說明
-[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo
-/master/folder.png">](資料夾結構)
+[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo/master/folder.png">](資料夾結構)
 *   connectors  官方提供多種程式語言實做的程式碼，此專案使用底下的mvc資料夾
     *   FilemanagerAreaRegistration.cs  
      註冊MVC路由用，範例改成："FileManager/connectors/mvc/filemanager"
@@ -37,10 +36,7 @@
     ```sh
     AreaRegistration.RegisterAllAreas();
     ```
-[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo
-/master/view1.png">](實際畫面1)
-[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo
-/master/view2.png">](實際畫面2)
-[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo
-/master/view3.png">](實際畫面3)
+[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo/master/view1.png">](實際畫面1)
+[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo/master/view2.png">](實際畫面2)
+[<img src="https://raw.githubusercontent.com/kkman021/FileManagerMvcDemo/master/view3.png">](實際畫面3)
 
