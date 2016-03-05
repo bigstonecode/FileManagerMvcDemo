@@ -1740,6 +1740,9 @@
                     buttons: btns
                 });
 
+                //count newfile success count, when send set to 0, when success set ++.
+                var addfileSuccessCount = 0;
+
                 $("div#multiple-uploads").dropzone({
                     paramName: "newfile",
                     url: fileConnector + '?config=' + userconfig,
@@ -1770,6 +1773,7 @@
                     sending: function (file, xhr, formData) {
                         formData.append("mode", "add");
                         formData.append("currentpath", path);
+                        addfileSuccessCount = 0;
                     },
                     success: function (file, response) {
                         $('#uploadresponse').empty().html(response);
@@ -1777,6 +1781,12 @@
 
                         if (data['Code'] == 0) {
                             this.removeFile(file);
+
+                            //when success if upload 1+N times , just show onces message
+                            addfileSuccessCount = addfileSuccessCount + 1;
+                            if (config.options.showConfirmation && addfileSuccessCount == 1) {
+                                $.prompt(lg.successful_added_file);
+                            }
                         } else {
                             // this.removeAllFiles();
                             getFolderInfo(path);
@@ -1794,9 +1804,6 @@
                             getFolderInfo(path);
                             if (path == fileRoot) createFileTree();
                             $('#filetree').find('a[data-path="' + path + '"]').click().click();
-                            if (config.options.showConfirmation) {
-                                $.prompt(lg.successful_added_file);
-                            }
                         }
                     }
                 });

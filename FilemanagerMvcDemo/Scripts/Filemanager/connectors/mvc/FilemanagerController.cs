@@ -33,6 +33,16 @@ namespace FilemanagerMvcDemo.Areas.FilemanagerArea.Controllers
         private string IconDirectory = WebConfigurationManager.AppSettings["Filemanager_IconDirectory"]; // Icon directory for filemanager. [string]
 
         /// <summary>
+        /// Is only allow imgextensions 是否只允許圖片檔案上傳 
+        /// </summary>
+        private bool IsOnlyImage = true;
+
+        /// <summary>
+        /// File Size Limit by MB , if 0 = unlimit。檔案允許最上檔案上限單位（MB），若為0代表不設限 
+        /// </summary>
+        private int LimitFileSizeMB = 4;
+
+        /// <summary>
         /// 所有允許上傳的附檔名 
         /// </summary>
         private List<string> allowedExtensions = new List<string> { ".ai", ".asx", ".avi", ".bmp", ".csv", ".dat", ".doc", ".docx", ".epub", ".fla", ".flv", ".gif", ".html", ".ico", ".jpeg", ".jpg", ".m4a", ".mobi", ".mov", ".mp3", ".mp4", ".mpa", ".mpg", ".mpp", ".pdf", ".png", ".pps", ".ppsx", ".ppt", ".pptx", ".ps", ".psd", ".qt", ".ra", ".ram", ".rar", ".rm", ".rtf", ".svg", ".swf", ".tif", ".txt", ".vcf", ".vsd", ".wav", ".wks", ".wma", ".wmv", ".wps", ".xls", ".xlsx", ".xml", ".zip" }; // Only allow these extensions to be uploaded
@@ -151,52 +161,37 @@ namespace FilemanagerMvcDemo.Areas.FilemanagerArea.Controllers
         /// <returns></returns>
         private string AddFile(string path)
         {
-            string response;
+            var errorFormat = "<textarea>{0}</textarea>";
+            HttpPostedFileBase file = Request.Files.Count == 0 ? null : Request.Files[0];
 
-            if (Request.Files.Count == 0 || Request.Files[0].ContentLength == 0)
+            string response = CheckFile(path, file);
+
+            if (!string.IsNullOrWhiteSpace(response))
+                return string.Format(errorFormat, response);
+
+            //Only allow certain characters in file names
+            var baseFileName = Regex.Replace(Path.GetFileNameWithoutExtension(file.FileName), @"[^\w_-]", "");
+            var filePath = Path.Combine(path, baseFileName + Path.GetExtension(file.FileName));
+
+            //Make file name unique
+            var i = 0;
+            while (System.IO.File.Exists(Server.MapPath(filePath)))
             {
-                response = Error("No file provided.");
+                i = i + 1;
+                baseFileName = Regex.Replace(baseFileName, @"_[\d]+$", "");
+                filePath = Path.Combine(path, baseFileName + "_" + i + Path.GetExtension(file.FileName));
             }
-            else
+            file.SaveAs(Server.MapPath(filePath));
+
+            response = json.Serialize(new
             {
-                if (!IsInRootPath(path))
-                {
-                    response = Error("Attempt to add file outside root path");
-                }
-                else
-                {
-                    System.Web.HttpPostedFileBase file = Request.Files[0];
-                    if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-                    {
-                        response = Error("Uploaded file type is not allowed.");
-                    }
-                    else
-                    {
-                        //Only allow certain characters in file names
-                        var baseFileName = Regex.Replace(Path.GetFileNameWithoutExtension(file.FileName), @"[^\w_-]", "");
-                        var filePath = Path.Combine(path, baseFileName + Path.GetExtension(file.FileName));
+                Path = path,
+                Name = Path.GetFileName(file.FileName),
+                Error = "No error",
+                Code = 0
+            });
 
-                        //Make file name unique
-                        var i = 0;
-                        while (System.IO.File.Exists(Server.MapPath(filePath)))
-                        {
-                            i = i + 1;
-                            baseFileName = Regex.Replace(baseFileName, @"_[\d]+$", "");
-                            filePath = Path.Combine(path, baseFileName + "_" + i + Path.GetExtension(file.FileName));
-                        }
-                        file.SaveAs(Server.MapPath(filePath));
-
-                        response = json.Serialize(new
-                        {
-                            Path = path,
-                            Name = Path.GetFileName(file.FileName),
-                            Error = "No error",
-                            Code = 0
-                        });
-                    }
-                }
-            }
-            return "<textarea>" + response + "</textarea>";
+            return string.Format(errorFormat, response);
         }
 
         /// <summary>
@@ -592,43 +587,58 @@ namespace FilemanagerMvcDemo.Areas.FilemanagerArea.Controllers
         /// <returns></returns>
         private string Replace(string path)
         {
-            if (Request.Files.Count == 0 || Request.Files[0].ContentLength == 0)
-            {
-                return Error("No file provided.");
-            }
-            else if (!IsInRootPath(path))
-            {
-                return Error("Attempt to replace file outside root path");
-            }
-            else
-            {
-                var fi = new FileInfo(Server.MapPath(path));
-                HttpPostedFileBase file = Request.Files[0];
-                if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-                {
-                    return Error("Uploaded file type is not allowed.");
-                }
-                else if (!Path.GetExtension(file.FileName).Equals(fi.Extension))
-                {
-                    return Error("Replacement file must have the same extension as the file being replaced.");
-                }
-                else if (!fi.Exists)
-                {
-                    return Error("File to replace not found.");
-                }
-                else
-                {
-                    file.SaveAs(fi.FullName);
+            HttpPostedFileBase file = Request.Files.Count == 0 ? null : Request.Files[0];
 
-                    return "<textarea>" + json.Serialize(new
-                    {
-                        Path = path.Replace("/" + fi.Name, ""),
-                        Name = fi.Name,
-                        Error = "No error",
-                        Code = 0
-                    }) + "</textarea>";
-                }
-            }
+            string response = CheckFile(path, file);
+
+            if (!string.IsNullOrWhiteSpace(response))
+                return response;
+
+            var fi = new FileInfo(Server.MapPath(path));
+
+            if (!fi.Exists)
+                return Error("File to replace not found.");
+
+            if (!Path.GetExtension(file.FileName).Equals(fi.Extension))
+                return Error("Replacement file must have the same extension as the file being replaced.");
+
+            file.SaveAs(fi.FullName);
+
+            return "<textarea>" + json.Serialize(new
+            {
+                Path = path.Replace("/" + fi.Name, ""),
+                Name = fi.Name,
+                Error = "No error",
+                Code = 0
+            }) + "</textarea>";
+        }
+
+        /// <summary>
+        /// Check File Info 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        private string CheckFile(string path, HttpPostedFileBase file)
+        {
+            var result = "";
+            if (file == null || file.ContentLength == 0)
+                result = Error("無檔案！");
+
+            if (!IsInRootPath(path))
+                result = Error("檔案路徑不再跟目錄底下！");
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (IsOnlyImage && !imgExtensions.Contains(fileExtension))
+                result = Error("不允許上傳的附件檔！");
+            else if (!allowedExtensions.Contains(fileExtension))
+                result = Error("不允許上傳的附件檔！");
+
+            if (LimitFileSizeMB != 0 && file.ContentLength > (LimitFileSizeMB * 1024 * 1024))
+                result = Error("檔案超過限制大小！");
+
+            return result;
         }
     }
 }
