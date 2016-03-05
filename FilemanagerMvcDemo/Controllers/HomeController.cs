@@ -11,5 +11,10 @@ namespace FilemanagerMvcDemo.Controllers
         {
             return View();
         }
+
+        public ActionResult CKEditor()
+        {
+            return View();
+        }
     }
 }

@@ -1,0 +1,17 @@
+﻿@{
+    ViewBag.Title = "CKEditor";
+}
+
+<h2>CKEditor</h2>
+<textarea name="editor1" id="editor1" rows="10" cols="80">
+    This is my textarea to be replaced with CKEditor.
+</textarea>
+@section scripts {
+    <script src='@Url.Content("~/Scripts/ckeditor/ckeditor.js")'></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var editor = CKEDITOR.replace('editor1');
+        });
+    </script>
+}
