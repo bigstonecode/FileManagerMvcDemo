@@ -11,7 +11,10 @@
 
     <script type="text/javascript">
         $(document).ready(function () {
-            var editor = CKEDITOR.replace('editor1');
+            var editor = CKEDITOR.replace('editor1',
+                    {
+                        filebrowserBrowseUrl: '@Url.Content("~/Scripts/Filemanager/index.html")',
+                    });
         });
     </script>
 }
