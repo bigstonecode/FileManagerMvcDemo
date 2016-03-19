@@ -25,8 +25,8 @@
     * upload ：底下有幾個設定
         *  multiple：是否允許一次上傳多個檔案
         *  number：一次上傳多個檔案的個數
-        *  imagesOnly：是否只允許上傳圖檔（需注意，Server端上傳時未實做）
-        *  fileSizeLimit：上傳圖檔的限制大小（需注意，Server端上傳時未實做）
+        *  imagesOnly：是否只允許上傳圖檔（需注意，官網Server端上傳時未實做）此範例已實做。
+        *  fileSizeLimit：上傳圖檔的限制大小（需注意，官網Server端上傳時未實做）此範例已實做。
 
 * FilemanagerController.cs 需設定兩個Web.Config中的AppSetting
     * Filemanager_RootPath 需與fileRoot相同
